@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import prisma from '@/lib/prisma';
 import { uniqueNamesGenerator, Config, adjectives, colors, animals } from 'unique-names-generator';
-
-const prisma = new PrismaClient();
 
 const customConfig: Config = {
   dictionaries: [adjectives, colors, animals],

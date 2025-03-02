@@ -95,7 +95,7 @@ The `package.json` was updated with scripts for Vercel deployment:
 ```json
 "scripts": {
   "postinstall": "prisma generate",
-  "vercel-build": "prisma generate && prisma migrate deploy && next build",
+  "vercel-build": "prisma generate && prisma migrate deploy && prisma db seed && next build",
   "migrate:dev": "prisma migrate dev",
   "migrate:deploy": "prisma migrate deploy",
   "db:push": "prisma db push",
@@ -103,7 +103,17 @@ The `package.json` was updated with scripts for Vercel deployment:
 }
 ```
 
-### 6. Environment Configuration
+### 6. Database Seeding
+
+The application requires initial data to function properly. The seeding process was configured to:
+
+1. **Populate Destinations**: The `dataset.json` file contains city data with clues, facts, and trivia
+2. **Automatic Seeding**: The build process includes database seeding during deployment
+3. **Seed Script**: The `prisma/seed.ts` script reads from `dataset.json` and populates the database
+
+For detailed seeding instructions, see [DATABASE_SEEDING.md](./DATABASE_SEEDING.md).
+
+### 7. Environment Configuration
 
 The `.env` file was updated with the Supabase PostgreSQL connection string:
 
@@ -117,7 +127,7 @@ JWT_SECRET="your-secret-key-here"
 1. Set up a Supabase PostgreSQL database
 2. Configure environment variables in Vercel
 3. Deploy the application to Vercel
-4. Run database migrations
+4. Database migrations and seeding will run automatically during deployment
 
 For detailed deployment instructions, see [SUPABASE_DEPLOYMENT.md](./SUPABASE_DEPLOYMENT.md).
 

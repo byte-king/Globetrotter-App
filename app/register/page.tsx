@@ -17,6 +17,7 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingUsername, setIsGeneratingUsername] = useState(false);
 
   useEffect(() => {
     // Generate username when component mounts
@@ -25,11 +26,14 @@ export default function RegisterPage() {
 
   const generateNewUsername = async () => {
     try {
+      setIsGeneratingUsername(true);
       const res = await fetch('/api/generate-username');
       const data = await res.json();
       setFormData(prev => ({ ...prev, username: data.username }));
     } catch (error) {
       console.error('Error generating username:', error);
+    } finally {
+      setIsGeneratingUsername(false);
     }
   };
 
@@ -98,7 +102,7 @@ export default function RegisterPage() {
 
         // Show success message with username
         alert(`Account created successfully! Your username is: ${formData.username}\nPlease save this username for future login.`);
-        router.push('/login?registered=true');
+        router.push(`/login?registered=true&username=${formData.username}`);
       } else {
         // Handle existing account recovery
         const res = await fetch('/api/auth/recover', {
@@ -131,19 +135,29 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.inputGroup}>
             <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="Choose a username"
-              required
-              minLength={3}
-              maxLength={20}
-              pattern="[a-zA-Z0-9_-]+"
-              title="Username can only contain letters, numbers, underscores, and hyphens"
-            />
+            <div className={styles.usernameInputGroup}>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="Choose a username"
+                required
+                minLength={3}
+                maxLength={20}
+                pattern="[a-zA-Z0-9_-]+"
+                title="Username can only contain letters, numbers, underscores, and hyphens"
+              />
+              <button 
+                type="button" 
+                onClick={generateNewUsername} 
+                className={styles.generateButton}
+                disabled={isGeneratingUsername}
+              >
+                {isGeneratingUsername ? 'Generating...' : 'Generate'}
+              </button>
+            </div>
           </div>
 
           <div className={styles.inputGroup}>

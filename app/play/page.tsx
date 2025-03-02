@@ -221,8 +221,20 @@ export default function GamePage() {
   const fetchRandomCities = async (excludeCity: string): Promise<string[]> => {
     try {
       const res = await fetch(`/api/random-cities?excludeCity=${encodeURIComponent(excludeCity)}&count=4`);
-      const cities: string[] = await res.json();
-      return cities;
+      
+      if (!res.ok) {
+        throw new Error(`API returned status: ${res.status}`);
+      }
+      
+      const data = await res.json();
+      
+      // Check if the response is an array
+      if (!Array.isArray(data)) {
+        console.error('Expected array but got:', data);
+        return ["Paris", "Tokyo", "New York", "London"];
+      }
+      
+      return data;
     } catch (error) {
       console.error('Error fetching random cities:', error);
       return ["Paris", "Tokyo", "New York", "London"];

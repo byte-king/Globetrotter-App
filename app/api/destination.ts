@@ -1,10 +1,10 @@
 // pages/api/destination.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
+import prisma from "@/lib/prisma"
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Create a new PrismaClient instance for each request to avoid prepared statement conflicts
+
+  
   try {
     const destinations = await prisma.destination.findMany();
     const randomIndex = Math.floor(Math.random() * destinations.length);

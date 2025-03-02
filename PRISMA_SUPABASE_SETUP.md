@@ -21,8 +21,7 @@ The Prisma client initialization was optimized for serverless environments:
 
 ```typescript
 // lib/prisma.ts
-import { PrismaClient } from '@prisma/client';
-
+import prisma from "@/lib/prisma"
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
 export const prisma =

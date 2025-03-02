@@ -165,10 +165,6 @@ function LoginForm() {
           <Link href="/register" className={styles.registerLink}>
             Create Account
           </Link>
-          <span className={styles.divider}>•</span>
-          <Link href="/register?mode=existing" className={styles.recoverLink}>
-            Recover Account
-          </Link>
         </div>
       </div>
     </div>

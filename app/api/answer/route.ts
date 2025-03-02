@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-
+import prisma from "@/lib/prisma"
 export async function POST(request: Request) {
+  // Create a new PrismaClient instance for this request
+
+  
   try {
     const body = await request.json();
     const { destinationId, guess } = body;
@@ -53,5 +55,5 @@ export async function POST(request: Request) {
       error: 'Error checking answer',
       message: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
-  }
+  } 
 } 

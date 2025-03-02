@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import prisma from '@/lib/prisma';
+import prisma from "@/lib/prisma"
 import { getTokenData } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
+  // Create a new PrismaClient instance for each request to avoid prepared statement conflicts
+  
   try {
     const token = request.cookies.get('token')?.value;
     
@@ -17,7 +19,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user stats from the database
-    const stats = await prisma.user.findUnique({
+    const stats = await prisma.user.findFirstOrThrow({
       where: { id: userData.userId },
       select: {
         id: true,

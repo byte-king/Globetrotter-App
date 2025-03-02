@@ -1,10 +1,10 @@
 // pages/api/challenge.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
+import prisma from "@/lib/prisma"
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Create a new PrismaClient instance for each request to avoid prepared statement conflicts
+
+  
   if (req.method !== 'GET')
     return res.status(405).json({ error: 'Method not allowed' });
     

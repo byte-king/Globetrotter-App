@@ -1,48 +1,48 @@
+// app/api/leaderboard/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+interface LeaderboardRow {
+  id: number;
+  username: string;
+  score: number;
+  streak: number | null;
+  difficulty: string | null;
+  createdAt: Date | null;
+}
+
 export async function GET() {
   try {
-    // Get users ordered by highest score
-    const users = await prisma.user.findMany({
-      orderBy: {
-        highestScore: 'desc'
-      },
-      select: {
-        id: true,
-        username: true,
-        highestScore: true,
-        scores: {
-          orderBy: {
-            createdAt: 'desc'
-          },
-          take: 1,
-          select: {
-            streak: true,
-            difficulty: true,
-            createdAt: true
-          }
-        }
-      },
-      take: 100
-    });
+    // Define the raw SQL query as a plain string
+    const query = `
+      SELECT 
+        u.id,
+        u.username,
+        u."highestScore" AS score,
+        s.streak,
+        s.difficulty,
+        s."createdAt"
+      FROM "User" u
+      LEFT JOIN (
+        SELECT DISTINCT ON ("userId") *
+        FROM "Score"
+        ORDER BY "userId", "createdAt" DESC
+      ) s ON s."userId" = u.id
+      ORDER BY u."highestScore" DESC
+      LIMIT 100;
+    `;
 
-    if (users.length === 0) {
-      return NextResponse.json([], { status: 200 });
-    }
+    // Use $queryRawUnsafe to execute the query without prepared statement caching
+    const leaderboardData = await prisma.$queryRawUnsafe<LeaderboardRow[]>(query);
 
-    // Transform the data for the response
-    const leaderboardData = users.map((user, index) => ({
-      id: user.id,
-      username: user.username || 'Anonymous',
-      score: user.highestScore,
-      streak: user.scores[0]?.streak || 0,
-      difficulty: user.scores[0]?.difficulty || 'medium',
+    // Optionally, add rank based on the result order
+    const rankedData = leaderboardData.map((row, index) => ({
+      ...row,
       rank: index + 1,
-      createdAt: user.scores[0]?.createdAt || new Date()
+      username: row.username || 'Anonymous'
     }));
 
-    return NextResponse.json(leaderboardData);
+    return NextResponse.json(rankedData);
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
     return NextResponse.json(
@@ -50,4 +50,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-} 
+}

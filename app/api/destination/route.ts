@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-
+import prisma from "@/lib/prisma"
 export async function GET() {
+  // Create a new PrismaClient instance for this request
+
+  
   try {
     const destinations = await prisma.destination.findMany();
     const randomIndex = Math.floor(Math.random() * destinations.length);
@@ -20,6 +22,7 @@ export async function GET() {
       return NextResponse.json({ error: 'No destination found' }, { status: 404 });
     }
   } catch (error) {
+    console.error('Error fetching destination:', error);
     return NextResponse.json({ error: `Error fetching destination: ${error}` }, { status: 500 });
-  }
+  } 
 } 

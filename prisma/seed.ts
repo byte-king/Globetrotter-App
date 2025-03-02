@@ -59,8 +59,7 @@ async function main() {
           funFacts: JSON.stringify(dest.fun_fact),
           trivia: JSON.stringify(dest.trivia),
           difficulty: dest.difficulty
-        })),
-        skipDuplicates: true // Skip records that would cause unique constraint violations
+        }))
       });
     }
     

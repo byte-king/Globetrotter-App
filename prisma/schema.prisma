@@ -16,6 +16,8 @@ model Destination {
   funFacts   String   @default("[]") // Stored as JSON string
   trivia     String   @default("[]") // Stored as JSON string
   difficulty String   @default("medium") // beginner, easy, medium, hard
+
+  @@unique([city, country])
 }
 
 model User {

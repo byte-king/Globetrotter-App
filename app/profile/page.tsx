@@ -6,7 +6,7 @@ import styles from '../styles/Profile.module.css';
 import LogoutButton from '../components/LogoutButton';
 
 interface UserStats {
-  maxScore: number;
+  highestScore: number;
   currentStreak: number;
   maxStreak: number;
   totalGames: number;
@@ -17,7 +17,7 @@ interface UserStats {
 
 const Profile = () => {
   const [stats, setStats] = useState<UserStats>({
-    maxScore: 0,
+    highestScore: 0,
     currentStreak: 0,
     maxStreak: 0,
     totalGames: 0,
@@ -145,7 +145,7 @@ const Profile = () => {
       <div className={styles.statsGrid}>
         <div className={styles.statsCard}>
           <span className={styles.statsLabel}>Max Score</span>
-          <span className={styles.statsValue}>{stats.maxScore.toLocaleString()}</span>
+          <span className={styles.statsValue}>{stats.highestScore?.toLocaleString() || "--"}</span>
         </div>
         <div className={styles.statsCard}>
           <span className={styles.statsLabel}>Current Streak</span>
@@ -161,7 +161,7 @@ const Profile = () => {
         </div>
         <div className={styles.statsCard}>
           <span className={styles.statsLabel}>Average Score</span>
-          <span className={styles.statsValue}>{stats.averageScore.toLocaleString()}</span>
+          <span className={styles.statsValue}>{stats.averageScore?.toLocaleString()}</span>
         </div>
       </div>
 

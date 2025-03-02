@@ -40,13 +40,14 @@ const Leaderboard = () => {
     try {
       setRefreshing(true);
       const res = await fetch(`/api/leaderboard?difficulty=${filter}&timeRange=${timeRange}`);
-      const data = await res.json();
+      let data = await res.json();
+      if(!!!data)data = [];
       console.log('Leaderboard data received:', data);
       setLeaderboard(data);
       
       // Calculate stats
-      const uniquePlayers = new Set(data.map((entry: LeaderboardEntry) => entry.username)).size;
-      const highestScore = Math.max(...data.map((entry: LeaderboardEntry) => entry.score), 0);
+      const uniquePlayers = new Set(data?.map((entry: LeaderboardEntry) => entry.username)).size;
+      const highestScore = Math.max(...data?.map((entry: LeaderboardEntry) => entry.score), 0);
       const avgScore = data.length ? 
         Math.round(data.reduce((acc: number, curr: LeaderboardEntry) => acc + curr.score, 0) / data.length) : 0;
 
@@ -120,11 +121,11 @@ const Leaderboard = () => {
         </div>
         <div className={styles.statsCard}>
           <span className={styles.statsLabel}>Highest Score</span>
-          <span className={styles.statsValue}>{stats.highestScore.toLocaleString()}</span>
+          <span className={styles.statsValue}>{stats.highestScore?.toLocaleString()}</span>
         </div>
         <div className={styles.statsCard}>
           <span className={styles.statsLabel}>Average Score</span>
-          <span className={styles.statsValue}>{stats.averageScore.toLocaleString()}</span>
+          <span className={styles.statsValue}>{stats.averageScore?.toLocaleString()}</span>
         </div>
         <div className={styles.statsCard}>
           <span className={styles.statsLabel}>Total Games</span>
@@ -171,7 +172,7 @@ const Leaderboard = () => {
             <div className={styles.date}>Date</div>
           </div>
 
-          {leaderboard.map((entry, index) => (
+          {leaderboard?.map((entry, index) => (
             <div key={entry.id} className={styles.tableRow}>
               <div className={styles.rank}>
                 {index < 3 ? (
@@ -190,7 +191,7 @@ const Leaderboard = () => {
               </div>
               <div 
                 className={styles.difficulty}
-                data-difficulty={entry.difficulty.toLowerCase()}
+                data-difficulty={entry?.difficulty?.toLowerCase()}
               >
                 {entry.difficulty}
               </div>

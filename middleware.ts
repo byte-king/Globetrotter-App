@@ -47,10 +47,12 @@ export async function middleware(request: NextRequest) {
 // Helper function to verify JWT token
 async function isTokenValid(token: string): Promise<boolean> {
   try {
+    console.log('Validating token...');
     const { payload } = await jose.jwtVerify(token, secret);
+    console.log('Token validation successful, payload:', payload);
     return !!payload;
   } catch (error) {
-    console.error('Token verification error:', error);
+    console.error('Token verification error details:', error);
     return false;
   }
 }

@@ -1,0 +1,55 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Destination {
+  id         Int      @id @default(autoincrement())
+  city       String
+  country    String
+  clues      String   @default("[]") // Stored as JSON string
+  funFacts   String   @default("[]") // Stored as JSON string
+  trivia     String   @default("[]") // Stored as JSON string
+  difficulty String   @default("medium") // beginner, easy, medium, hard
+}
+
+model User {
+  id                 Int       @id @default(autoincrement())
+  email              String    @unique
+  username           String    @unique
+  normalizedUsername String    @unique  // Lowercase version for case-insensitive uniqueness
+  password           String    // Hashed password
+  score              Int       @default(0)
+  highestScore       Int       @default(0)
+  streak             Int       @default(0)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime @updatedAt
+  friends            Friend[]  @relation("UserFriends")
+  friendOf           Friend[]  @relation("FriendOfUser")
+  scores             Score[]
+}
+
+model Score {
+  id         Int      @id @default(autoincrement())
+  value      Int
+  streak     Int      @default(0)
+  difficulty String
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id])
+  userId     Int?
+}
+
+model Friend {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation("UserFriends", fields: [userId], references: [id])
+  userId    Int
+  friend    User     @relation("FriendOfUser", fields: [friendId], references: [id])
+  friendId  Int
+  createdAt DateTime @default(now())
+
+  @@unique([userId, friendId])
+}

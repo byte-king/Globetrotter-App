@@ -1,0 +1,518 @@
+.container {
+  min-height: 100vh;
+  padding: 2rem;
+  background-color: #ffffff;
+  background-image: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+}
+
+.header {
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+}
+
+.headerContent h1 {
+  font-size: 2rem;
+  margin: 0;
+  background: linear-gradient(45deg, #2196F3, #00BCD4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.headerButtons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.homeButton,
+.dashboardButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.homeButton {
+  background-color: #fff;
+  border: 2px solid #2196F3;
+  color: #2196F3;
+}
+
+.dashboardButton {
+  background-color: #2196F3;
+  border: none;
+  color: white;
+}
+
+.homeButton:hover,
+.dashboardButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.difficultySelect {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.welcomeCard {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+  border-radius: 12px;
+  color: white;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.welcomeCard h2 {
+  font-size: 2rem;
+  margin: 0 0 1rem;
+}
+
+.statsHighlight {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.statsHighlight span {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.statsHighlight strong {
+  font-size: 2.5rem;
+}
+
+.difficultyOptions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.difficultyButton {
+  padding: 1.5rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  position: relative;
+}
+
+.difficultyButton.selected {
+  border-color: #2196F3;
+  background: #f0f7ff;
+}
+
+.difficultyInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.difficultyLabel {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #000000;
+}
+
+.multiplier {
+  font-size: 0.9rem;
+  color: #000000;
+}
+
+.selectedIndicator {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  color: #2196F3;
+  font-size: 1.5rem;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.startButton {
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.startButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.gameHeader {
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.userInfo {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.username {
+  font-weight: 600;
+  color: #000000;
+}
+
+.score,
+.streak,
+.highScore {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #000000;
+}
+
+.timer {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #000000;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.timer[data-warning="true"] {
+  color: #e53e3e;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.difficultyBadge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.difficultyBadge[data-difficulty="easy"] {
+  background: #c6f6d5;
+  color: #000000;
+}
+
+.difficultyBadge[data-difficulty="medium"] {
+  background: #feebc8;
+  color: #000000;
+}
+
+.difficultyBadge[data-difficulty="hard"] {
+  background: #fed7d7;
+  color: #000000;
+}
+
+.difficultyBadge[data-difficulty="brutal"] {
+  background: #e9d8fd;
+  color: #000000;
+}
+
+.clueContainer {
+  margin: 2rem 0;
+}
+
+.clue {
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  color: #000000;
+}
+
+.clueNumber {
+  display: block;
+  font-size: 0.9rem;
+  color: #000000;
+  margin-bottom: 0.5rem;
+}
+
+.revealedAnswer {
+  background: #fed7d7;
+  padding: 1.5rem;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.revealLabel {
+  display: block;
+  font-size: 0.9rem;
+  color: #c53030;
+  margin-bottom: 0.5rem;
+}
+
+.optionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.optionButton {
+  padding: 1rem;
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  color: #000000;
+}
+
+.optionButton:hover:not(:disabled) {
+  border-color: #2196F3;
+  background: #ffffff;
+}
+
+.optionButton.selected {
+  border-color: #2196F3;
+  background: #f0f7ff;
+}
+
+.optionButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.checkmark {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  color: #2196F3;
+}
+
+.gameControls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.actionButton {
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submitButton {
+  background: #2196F3;
+  color: white;
+  border: none;
+}
+
+.skipButton {
+  background: white;
+  color: #000000;
+  border: 2px solid #e2e8f0;
+}
+
+.submitButton:hover:not(:disabled),
+.skipButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.submitButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.feedback {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border-radius: 12px;
+  animation: slideIn 0.3s ease;
+}
+
+.feedbackCorrect {
+  background: #c6f6d5;
+}
+
+.feedbackIncorrect {
+  background: #fed7d7;
+}
+
+.feedbackContent {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.feedbackIcon {
+  font-size: 2rem;
+}
+
+.feedbackMessage {
+  flex: 1;
+}
+
+.mainMessage {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+
+.subMessage {
+  color: #000000;
+  margin: 0;
+}
+
+.funMessage {
+  font-style: italic;
+  color: #000000;
+  margin: 0.5rem 0 0;
+}
+
+.shareModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.shareContent {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+}
+
+.shareButtons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.shareButton,
+.closeButton {
+  flex: 1;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shareButton {
+  background: #2196F3;
+  color: white;
+  border: none;
+}
+
+.closeButton {
+  background: white;
+  color: #000000;
+  border: 2px solid #e2e8f0;
+}
+
+.shareButton:hover,
+.closeButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .headerContent {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .userInfo {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .headerButtons {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .optionsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .gameControls {
+    flex-direction: column;
+  }
+
+  .actionButton {
+    width: 100%;
+  }
+
+  .shareButtons {
+    flex-direction: column;
+  }
+} 

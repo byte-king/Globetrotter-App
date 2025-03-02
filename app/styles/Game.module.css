@@ -114,9 +114,45 @@
   position: relative;
 }
 
+.difficultyButton[data-difficulty="easy"] {
+  border-color: #4CAF50;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.difficultyButton[data-difficulty="medium"] {
+  border-color: #FF9800;
+  background: rgba(255, 152, 0, 0.1);
+}
+
+.difficultyButton[data-difficulty="hard"] {
+  border-color: #f44336;
+  background: rgba(244, 67, 54, 0.1);
+}
+
+.difficultyButton[data-difficulty="brutal"] {
+  border-color: #9C27B0;
+  background: rgba(156, 39, 176, 0.1);
+}
+
 .difficultyButton.selected {
-  border-color: #2196F3;
-  background: #f0f7ff;
+  background: white;
+  box-shadow: 0 0 0 2px currentColor;
+}
+
+.difficultyButton[data-difficulty="easy"].selected {
+  color: #4CAF50;
+}
+
+.difficultyButton[data-difficulty="medium"].selected {
+  color: #FF9800;
+}
+
+.difficultyButton[data-difficulty="hard"].selected {
+  color: #f44336;
+}
+
+.difficultyButton[data-difficulty="brutal"].selected {
+  color: #9C27B0;
 }
 
 .difficultyInfo {
@@ -224,6 +260,14 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  color: #000000;
+  text-align: center;
+}
+
 .difficultyBadge {
   display: inline-block;
   padding: 0.5rem 1rem;
@@ -235,23 +279,23 @@
 }
 
 .difficultyBadge[data-difficulty="easy"] {
-  background: #c6f6d5;
-  color: #000000;
+  background-color: #4CAF50;
+  color: white;
 }
 
 .difficultyBadge[data-difficulty="medium"] {
-  background: #feebc8;
-  color: #000000;
+  background-color: #FF9800;
+  color: white;
 }
 
 .difficultyBadge[data-difficulty="hard"] {
-  background: #fed7d7;
-  color: #000000;
+  background-color: #f44336;
+  color: white;
 }
 
 .difficultyBadge[data-difficulty="brutal"] {
-  background: #e9d8fd;
-  color: #000000;
+  background-color: #9C27B0;
+  color: white;
 }
 
 .clueContainer {
@@ -259,11 +303,12 @@
 }
 
 .clue {
-  background: #ffffff;
+  background: #f8f9fa;
   padding: 1.5rem;
   border-radius: 12px;
   margin-bottom: 1rem;
   color: #000000;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .clueNumber {
@@ -271,6 +316,38 @@
   font-size: 0.9rem;
   color: #000000;
   margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.difficulty {
+  text-transform: capitalize;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+}
+
+.difficulty[data-difficulty="easy"] {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.difficulty[data-difficulty="medium"] {
+  background-color: #FF9800;
+  color: white;
+}
+
+.difficulty[data-difficulty="hard"] {
+  background-color: #f44336;
+  color: white;
+}
+
+.difficulty[data-difficulty="brutal"] {
+  background-color: #9C27B0;
+  color: white;
 }
 
 .revealedAnswer {

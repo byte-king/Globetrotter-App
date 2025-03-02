@@ -4,23 +4,22 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from '../styles/Game.module.css';
 import LogoutButton from '../components/LogoutButton';
-import UsernameModal from '../components/UsernameModal';
 
 interface Destination {
   id: number;
   city: string;
   country: string;
   clues: string[];
-  funFacts: string[];
-  trivia: string[];
+  // funFacts: string[];  // Unused
+  // trivia: string[];    // Unused
   difficulty: string;
 }
 
 interface UserStats {
   id: number;
   username: string;
-  score: number;
-  streak: number;
+  // score: number;      // Unused
+  // streak: number;     // Unused
   highestScore: number;
 }
 
@@ -38,7 +37,6 @@ interface GameState {
   options: string[];
   questionsAnswered: number;
   questionDistribution: Record<string, number>;
-  challengeId?: string;
 }
 
 const TIMER_DURATION = 60;
@@ -89,9 +87,6 @@ export default function GamePage() {
     brutal: 0
   });
   const [showShareModal, setShowShareModal] = useState(false);
-  const [challengeId, setChallengeId] = useState<string | null>(null);
-  const [showUsernameModal, setShowUsernameModal] = useState(false);
-  const [tempUsername, setTempUsername] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUserStats = async () => {
@@ -248,8 +243,8 @@ export default function GamePage() {
     }
 
     try {
-      let res = await fetch(`/api/destination?difficulty=${selectedDifficulty}`);
-      let data = await res.json();
+      const res = await fetch(`/api/destination?difficulty=${selectedDifficulty}`);
+      const data = await res.json();
 
       if (data && !data.error) {
         setDestination(data);

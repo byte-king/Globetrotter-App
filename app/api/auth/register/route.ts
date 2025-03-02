@@ -7,7 +7,16 @@ const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
   try {
-    const { username, email, password } = await request.json();
+    const body = await request.json();
+    const { username, email, password } = body;
+
+    // Check for missing fields
+    if (!username || !email || !password) {
+      return NextResponse.json(
+        { error: 'All fields are required' },
+        { status: 400 }
+      );
+    }
 
     // Validate username format
     if (!isValidUsername(username)) {
@@ -67,17 +76,22 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create new user
-    const user = await prisma.user.create({
+    const newUser = await prisma.user.create({
       data: {
         username,
         normalizedUsername,
         email,
         password: hashedPassword,
+        highestScore: 0
       }
     });
 
+    // Remove password from response
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _, ...userWithoutPassword } = newUser;
+
     return NextResponse.json(
-      { message: 'User registered successfully' },
+      { message: 'User registered successfully', user: userWithoutPassword },
       { status: 201 }
     );
 

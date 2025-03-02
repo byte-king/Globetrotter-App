@@ -22,6 +22,6 @@ export async function GET() {
       return NextResponse.json({ error: 'No destination found' }, { status: 404 });
     }
   } catch (error) {
-    return NextResponse.json({ error: 'Error fetching destination' }, { status: 500 });
+    return NextResponse.json({ error: `Error fetching destination: ${error}` }, { status: 500 });
   }
 } 

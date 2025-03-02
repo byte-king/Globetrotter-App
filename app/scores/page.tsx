@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import styles from './scores.module.css';
@@ -15,7 +15,7 @@ interface Score {
   userId: string;
 }
 
-export default function ScoresPage() {
+function ScoresContent() {
   const searchParams = useSearchParams();
   const [highScores, setHighScores] = useState<Score[]>([]);
   const [isNewRecord, setIsNewRecord] = useState(false);
@@ -62,9 +62,9 @@ export default function ScoresPage() {
         <h2>High Scores</h2>
         <div className={styles.scoresList}>
           {highScores.map((score, index) => (
-            <div key={score.id} className={styles.scoreItem}>
+            <div key={index} className={styles.scoreItem}>
               <span className={styles.rank}>#{score.rank}</span>
-              <span className={styles.username}>{score.username || `Player_${score.userId}`}</span>
+              <span className={styles.username}>{score.username || `Anonymous`}</span>
               <span className={styles.points}>{score.value}</span>
               <span className={styles.scoreStreak}>🔥 {score.streak}</span>
               <span className={styles.date}>
@@ -84,5 +84,23 @@ export default function ScoresPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+// Loading fallback component
+function ScoresLoading() {
+  return (
+    <div className={styles.container}>
+      <h1 className={styles.title}>Game Over!</h1>
+      <div className={styles.loading}>Loading scores...</div>
+    </div>
+  );
+}
+
+export default function ScoresPage() {
+  return (
+    <Suspense fallback={<ScoresLoading />}>
+      <ScoresContent />
+    </Suspense>
   );
 } 

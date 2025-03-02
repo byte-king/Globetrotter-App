@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import styles from './styles/Home.module.css';
 import LogoutButton from './components/LogoutButton';
+import DashboardButton from './components/DashboardButton';
 
 interface UserStats {
   username: string;
@@ -35,9 +36,7 @@ export default function HomePage() {
         <div className={styles.header}>
           <h1 className={styles.title}>Globetrotter Challenge</h1>
           <div className={styles.headerButtons}>
-            <Link href="/dashboard" className={`${styles.headerButton} ${styles.primaryButton}`}>
-              Dashboard
-            </Link>
+            <DashboardButton />
             <LogoutButton />
           </div>
         </div>

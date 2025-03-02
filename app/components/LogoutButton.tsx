@@ -1,10 +1,24 @@
 'use client'
 
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import styles from '../styles/LogoutButton.module.css';
 
 const LogoutButton = () => {
   const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/user/stats');
+        setIsAuthenticated(res.ok);
+      } catch {
+        setIsAuthenticated(false);
+      }
+    };
+    checkAuth();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -21,10 +35,14 @@ const LogoutButton = () => {
       } else {
         console.error('Logout failed');
       }
-    } catch (error) {
-      console.error('Error during logout:', error);
+    } catch {
+      console.error('Error during logout');
     }
   };
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <button 

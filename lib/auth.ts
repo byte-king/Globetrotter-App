@@ -13,7 +13,7 @@ export function getTokenData(token: string): TokenData | null {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as TokenData;
     return decoded;
-  } catch (error) {
+  } catch {
     return null;
   }
 } 

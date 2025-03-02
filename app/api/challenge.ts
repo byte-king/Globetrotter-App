@@ -30,6 +30,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       score: user.score,
     });
   } catch (error) {
-    res.status(500).json({ error: 'Error generating challenge' });
+    res.status(500).json({ error: `Error generating challenge: ${error}` });
   }
 }

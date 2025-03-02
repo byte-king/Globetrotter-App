@@ -41,6 +41,7 @@ const Leaderboard = () => {
       setRefreshing(true);
       const res = await fetch(`/api/leaderboard?difficulty=${filter}&timeRange=${timeRange}`);
       const data = await res.json();
+      console.log('Leaderboard data received:', data);
       setLeaderboard(data);
       
       // Calculate stats
@@ -69,16 +70,6 @@ const Leaderboard = () => {
       day: 'numeric',
       year: 'numeric'
     });
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    const colors = {
-      easy: '#4CAF50',
-      medium: '#2196F3',
-      hard: '#FF9800',
-      brutal: '#f44336'
-    };
-    return colors[difficulty as keyof typeof colors] || '#757575';
   };
 
   const handleRefresh = () => {
@@ -190,7 +181,7 @@ const Leaderboard = () => {
                 ) : `#${index + 1}`}
               </div>
               <div className={styles.player}>
-                {entry.username || `Player_${Math.floor(Math.random() * 10000)}`}
+                {entry.username}
               </div>
               <div className={styles.score}>{entry.score.toLocaleString()}</div>
               <div className={styles.streak}>
@@ -199,7 +190,7 @@ const Leaderboard = () => {
               </div>
               <div 
                 className={styles.difficulty}
-                style={{ color: getDifficultyColor(entry.difficulty) }}
+                data-difficulty={entry.difficulty.toLowerCase()}
               >
                 {entry.difficulty}
               </div>

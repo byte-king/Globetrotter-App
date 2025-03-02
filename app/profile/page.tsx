@@ -39,15 +39,21 @@ const Profile = () => {
     fetchUserStats();
   }, []);
 
-  const fetchUserStats = async () => {
+  const fetchUserStats = async (): Promise<void> => {
     try {
       const res = await fetch('/api/user/stats');
-      if (!res.ok) throw new Error('Failed to fetch user stats');
-      const data = await res.json();
+      if (!res.ok) {
+        throw new Error('Failed to fetch user stats');
+      }
+      const data: UserStats = await res.json();
       setStats(data);
-    } catch (error) {
+    } catch (error: unknown) {
+      let errorMessage: string = 'Unknown error occurred';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
       setIsError(true);
-      setMessage('Failed to load user statistics');
+      setMessage(`Failed to load user statistics: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -71,7 +77,7 @@ const Profile = () => {
       setNewEmail('');
     } catch (error) {
       setIsError(true);
-      setMessage('Failed to update email');
+      setMessage(`Failed to update email: ${error}`);
     }
   };
 
@@ -79,7 +85,7 @@ const Profile = () => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
       setIsError(true);
-      setMessage('Passwords do not match');
+      setMessage(`Passwords do not match`);
       return;
     }
 
@@ -103,7 +109,7 @@ const Profile = () => {
       setConfirmPassword('');
     } catch (error) {
       setIsError(true);
-      setMessage('Failed to update password');
+      setMessage(`Failed to update password: ${error}`);
     }
   };
 

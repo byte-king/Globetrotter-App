@@ -7,6 +7,6 @@ export async function verifyToken(token: string): Promise<number> {
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
     return decoded.userId;
   } catch (error) {
-    throw new Error('Invalid token');
+    throw new Error(`Invalid token: ${error}`);
   }
 } 

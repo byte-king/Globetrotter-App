@@ -30,7 +30,7 @@ export async function GET() {
     // Calculate ranks based on score
     let currentRank = 1;
     let previousScore: number | null = null;
-    let rankedScores = scores.map((score, index) => {
+    const rankedScores = scores.map((score, index) => {
       // If score is same as previous, keep same rank
       if (previousScore === score.value) {
         // Don't increment currentRank
@@ -44,7 +44,7 @@ export async function GET() {
         value: score.value,
         streak: score.streak,
         difficulty: score.difficulty,
-        username: score.user?.username || 'Anonymous',
+        username: score.user?.username || `Anonymous`,
         userId: score.user?.id || null,
         createdAt: score.createdAt,
         rank: currentRank,
@@ -57,7 +57,10 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Error fetching scores:', error);
-    return NextResponse.json({ error: 'Error fetching scores' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Error fetching scores',
+      message: error instanceof Error ? error.message : 'Unknown error' 
+    }, { status: 500 });
   }
 }
 
@@ -70,13 +73,24 @@ export async function POST(request: Request) {
       userId: number;
     };
 
+    // Validate input parameters
+    if (score === undefined || streak === undefined || !difficulty || !userId) {
+      return NextResponse.json({ 
+        error: 'Missing required parameters',
+        details: 'score, streak, difficulty, and userId are required'
+      }, { status: 400 });
+    }
+
     // Verify the user exists
     const user = await prisma.user.findUnique({
       where: { id: userId }
     });
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ 
+        error: 'User not found',
+        details: `No user found with ID: ${userId}`
+      }, { status: 404 });
     }
 
     // Create score record with user association
@@ -132,6 +146,9 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('Error saving score:', error);
-    return NextResponse.json({ error: 'Error saving score' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Error saving score',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }

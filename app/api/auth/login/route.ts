@@ -9,7 +9,16 @@ const secret = new TextEncoder().encode(JWT_SECRET);
 
 export async function POST(request: Request) {
   try {
-    const { username, password } = await request.json();
+    const body = await request.json();
+    const { username, password } = body;
+
+    // Check for missing fields
+    if (!username || !password) {
+      return NextResponse.json(
+        { error: 'Username and password are required' },
+        { status: 400 }
+      );
+    }
 
     // Find user by username with all required fields
     const user = await prisma.user.findUnique({
@@ -50,16 +59,19 @@ export async function POST(request: Request) {
       .setExpirationTime('7d')
       .sign(secret);
 
+    // Create user data without sensitive information
+    const userData = {
+      id: user.id,
+      username: user.username,
+      highestScore: user.highestScore,
+      score: user.score,
+      streak: user.streak
+    };
+
     // Create response with cookie
     const response = NextResponse.json({
       message: 'Login successful',
-      user: {
-        id: user.id,
-        username: user.username,
-        highestScore: user.highestScore,
-        score: user.score,
-        streak: user.streak
-      }
+      user: userData
     });
 
     // Set cookie

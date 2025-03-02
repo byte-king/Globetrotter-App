@@ -1,24 +1,21 @@
 'use client'
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
+// import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import styles from './register.module.css';
 import { isValidUsername, isValidEmail } from '../utils/validation';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<'new' | 'existing'>('new');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [mode, /* setMode */] = useState<'new' | 'existing'>('new');  // Currently unused but needed for validation
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    confirmPassword: '',
     username: ''
   });
   const [error, setError] = useState('');
-  const [generatedUsername, setGeneratedUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -30,7 +27,6 @@ export default function RegisterPage() {
     try {
       const res = await fetch('/api/generate-username');
       const data = await res.json();
-      setGeneratedUsername(data.username);
       setFormData(prev => ({ ...prev, username: data.username }));
     } catch (error) {
       console.error('Error generating username:', error);
@@ -43,16 +39,11 @@ export default function RegisterPage() {
     setError(''); // Clear error when user types
   };
 
-  const validateForm = () => {
+  const validateForm = (): boolean => {
     // For new accounts, check all fields
     if (mode === 'new') {
-      if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
+      if (!formData.username || !formData.email || !formData.password) {
         setError('All fields are required');
-        return false;
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match');
         return false;
       }
     } else {
@@ -96,11 +87,7 @@ export default function RegisterPage() {
         const res = await fetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: formData.username,
-            email: formData.email,
-            password: formData.password
-          })
+          body: JSON.stringify(formData)
         });
 
         const data = await res.json();
@@ -117,11 +104,7 @@ export default function RegisterPage() {
         const res = await fetch('/api/auth/recover', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: formData.username,
-            email: formData.email,
-            password: formData.password
-          })
+          body: JSON.stringify(formData)
         });
 
         const data = await res.json();
@@ -141,72 +124,27 @@ export default function RegisterPage() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.formCard}>
-        <h1>{mode === 'new' ? 'Create Account' : 'Recover Account'}</h1>
-        <p className={styles.subtitle}>
-          {mode === 'new' 
-            ? 'Join the Globetrotter Challenge!' 
-            : 'Recover your existing account'}
-        </p>
-
-        <div className={styles.modeToggle}>
-          <button 
-            className={`${styles.modeButton} ${mode === 'new' ? styles.active : ''}`}
-            onClick={() => setMode('new')}
-          >
-            New Account
-          </button>
-          <button 
-            className={`${styles.modeButton} ${mode === 'existing' ? styles.active : ''}`}
-            onClick={() => setMode('existing')}
-          >
-            Existing Account
-          </button>
-        </div>
-
-        {error && <div className={styles.error}>{error}</div>}
-
+      <div className={styles.formContainer}>
+        <h1>Create Account</h1>
+        <p className={styles.subtitle}>Join the world&apos;s most exciting geography game!</p>
+        
         <form onSubmit={handleSubmit} className={styles.form}>
-          {mode === 'new' && (
-            <div className={styles.usernameSection}>
-              <div className={styles.inputGroup}>
-                <label>Your Username (Auto-generated)</label>
-                <div className={styles.usernameDisplay}>
-                  <input
-                    type="text"
-                    value={formData.username}
-                    readOnly
-                    className={styles.usernameInput}
-                  />
-                  <button 
-                    type="button" 
-                    onClick={generateNewUsername}
-                    className={styles.regenerateButton}
-                  >
-                    🔄 New
-                  </button>
-                </div>
-                <p className={styles.usernameNote}>
-                  Please save this username - you'll need it to recover your account!
-                </p>
-              </div>
-            </div>
-          )}
-
-          {mode === 'existing' && (
-            <div className={styles.inputGroup}>
-              <label htmlFor="username">Your Username</label>
-              <input
-                type="text"
-                id="username"
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                required
-                placeholder="Enter your saved username"
-              />
-            </div>
-          )}
+          <div className={styles.inputGroup}>
+            <label htmlFor="username">Username</label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              placeholder="Choose a username"
+              required
+              minLength={3}
+              maxLength={20}
+              pattern="[a-zA-Z0-9_-]+"
+              title="Username can only contain letters, numbers, underscores, and hyphens"
+            />
+          </div>
 
           <div className={styles.inputGroup}>
             <label htmlFor="email">Email</label>
@@ -216,75 +154,41 @@ export default function RegisterPage() {
               name="email"
               value={formData.email}
               onChange={handleChange}
+              placeholder="Enter your email"
               required
             />
           </div>
 
           <div className={styles.inputGroup}>
-            <label htmlFor="password">
-              {mode === 'new' ? 'Create Password' : 'New Password'}
-            </label>
-            <div className={styles.passwordInput}>
-              <input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                minLength={8}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className={styles.showPasswordButton}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
-              </button>
-            </div>
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Create a password"
+              required
+              minLength={6}
+            />
           </div>
 
-          {mode === 'new' && (
-            <div className={styles.inputGroup}>
-              <label htmlFor="confirmPassword">Confirm Password</label>
-              <div className={styles.passwordInput}>
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className={styles.showPasswordButton}
-                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                >
-                  {showConfirmPassword ? <MdVisibilityOff /> : <MdVisibility />}
-                </button>
-              </div>
-            </div>
-          )}
-
-          <button 
-            type="submit" 
-            className={styles.submitButton}
-            disabled={isLoading}
-          >
-            {isLoading 
-              ? 'Processing...' 
-              : mode === 'new' 
-                ? 'Create Account' 
-                : 'Recover Account'}
+          <button type="submit" className={styles.submitButton} disabled={isLoading}>
+            {isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
         </form>
 
-        <p className={styles.loginLink}>
-          Already have an account? <Link href="/login">Log In</Link>
-        </p>
+        <div className={styles.links}>
+          <Link href="/login" className={styles.link}>
+            Already have an account? Log in
+          </Link>
+        </div>
+
+        {error && (
+          <div className={styles.error}>
+            {error}
+          </div>
+        )}
       </div>
     </div>
   );

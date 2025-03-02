@@ -22,6 +22,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(404).json({ error: 'No destination found' });
     }
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching destination' });
+    res.status(500).json({ error: `Error fetching destination: ${error}` });
   }
 }

@@ -1,15 +1,21 @@
 'use client'
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import styles from './login.module.css';
 
-export default function LoginPage() {
+// Login request type
+interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<LoginRequest>({
     username: '',
     password: ''
   });
@@ -41,10 +47,29 @@ export default function LoginPage() {
     setError('');
   };
 
+  const validateForm = (): boolean => {
+    if (!formData.username.trim()) {
+      setError('Please enter your username');
+      return false;
+    }
+
+    if (!formData.password) {
+      setError('Please enter your password');
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
+
+    if (!validateForm()) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch('/api/auth/login', {
@@ -147,5 +172,25 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading fallback component
+function LoginLoading() {
+  return (
+    <div className={styles.container}>
+      <div className={styles.formCard}>
+        <h1>Welcome Back!</h1>
+        <p className={styles.subtitle}>Loading login form...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginLoading />}>
+      <LoginForm />
+    </Suspense>
   );
 } 

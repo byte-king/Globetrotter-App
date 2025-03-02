@@ -248,15 +248,41 @@
   color: white;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 0.9rem;
   white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 500;
+  min-width: 100px;
 }
 
 .generateButton:hover:not(:disabled) {
-  background-color: #3a7bc8;
+  background-color: #3a80d2;
+  transform: translateY(-1px);
 }
 
 .generateButton:disabled {
-  background-color: #a5c6f1;
+  background-color: #a0c4f1;
   cursor: not-allowed;
+}
+
+.formContainer {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+.links {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.link {
+  color: #4a90e2;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
 } 

@@ -13,7 +13,7 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    username: ''
+    username: ''  // Initialize with empty string
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +29,9 @@ export default function RegisterPage() {
       setIsGeneratingUsername(true);
       const res = await fetch('/api/generate-username');
       const data = await res.json();
-      setFormData(prev => ({ ...prev, username: data.username }));
+      if (data.username) {
+        setFormData(prev => ({ ...prev, username: data.username }));
+      }
     } catch (error) {
       console.error('Error generating username:', error);
     } finally {
@@ -140,7 +142,7 @@ export default function RegisterPage() {
                 type="text"
                 id="username"
                 name="username"
-                value={formData.username}
+                value={formData.username || ''}
                 onChange={handleChange}
                 placeholder="Choose a username"
                 required

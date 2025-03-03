@@ -22,7 +22,9 @@
     "prisma:seed:sqlite": "ts-node -P tsconfig.seed.json prisma/seed.sqlite.ts",
     "prisma:seed:postgres": "ts-node -P tsconfig.seed.json prisma/seed.ts",
     "db:setup:sqlite": "npm run migrate:sqlite && npm run prisma:seed:sqlite",
-    "db:reset:sqlite": "rm -f prisma/dev.db && npm run db:setup:sqlite"
+    "db:reset:sqlite": "rm -f prisma/dev.db && npm run db:setup:sqlite",
+    "netlify:build": "PRISMA_CLI_BINARY_TARGETS='darwin,darwin-arm64,debian-openssl-1.1.x' prisma generate --schema=./prisma/schema.sqlitedb.prisma && prisma migrate deploy --schema=./prisma/schema.sqlitedb.prisma && (ts-node -P tsconfig.seed.json prisma/seed.sqlite.ts || echo 'Seed failed but continuing build') && next build",
+    "netlify:dev": "netlify dev"
   },
     "dependencies": {
     "@prisma/client": "^6.4.1",

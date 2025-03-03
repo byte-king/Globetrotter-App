@@ -31,7 +31,7 @@ export async function GET() {
       take: 100
     });
 
-    const rankedLeaderboard = leaderboard.map((entry, index) => ({
+    const rankedLeaderboard = leaderboard.map((entry) => ({
       id: entry.id,
       username: entry.username,
       score: entry.highestScore,

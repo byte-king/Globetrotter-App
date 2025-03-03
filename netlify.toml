@@ -4,6 +4,7 @@
 
 [build.environment]
   PRISMA_CLI_BINARY_TARGETS = "darwin,darwin-arm64,debian-openssl-1.1.x"
+  SQLITE_URL = "file:/tmp/data.db"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

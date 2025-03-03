@@ -1,5 +1,5 @@
 [build]
-  command = "mkdir -p .netlify/state && cp prisma/dev.db .netlify/state/data.db && npm run netlify:build"
+  command = "mkdir -p .netlify/state && cp ./prisma/prisma/dev.db .netlify/state/data.db && npm run netlify:build"
   publish = ".next"
 
 [build.environment]

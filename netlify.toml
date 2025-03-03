@@ -1,5 +1,5 @@
 [build]
-  command = "prisma generate && prisma migrate deploy && (prisma db seed || echo 'Seed failed but continuing build') && next build"
+  command = "prisma generate --schema=./prisma/schema.sqlitedb.prisma && prisma migrate deploy && (ts-node -P tsconfig.seed.json prisma/seed.sqlite.ts || echo 'Seed failed but continuing build') && next build"
   publish = ".next"
 
 [build.environment]

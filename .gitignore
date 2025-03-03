@@ -53,6 +53,7 @@ dev.db-journal
 prisma/generated/
 /prisma/.prisma/
 prisma/.prisma/
+prisma/prisma/
 
 # Local Netlify folder
 .netlify

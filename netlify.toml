@@ -1,10 +1,14 @@
 [build]
-  command = "npm run netlify:build"
+  command = "mkdir -p .netlify/state && cp prisma/dev.db .netlify/state/data.db && npm run netlify:build"
   publish = ".next"
 
 [build.environment]
+  SQLITE_URL = "file:.netlify/state/data.db"
   PRISMA_CLI_BINARY_TARGETS = "darwin,darwin-arm64,debian-openssl-1.1.x"
-  SQLITE_URL = "file:/tmp/data.db"
+
+[functions]
+  included_files = ["prisma/dev.db"]
+  node_bundler = "esbuild"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

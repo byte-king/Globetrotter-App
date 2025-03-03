@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "prisma generate && prisma migrate deploy && (prisma db seed || echo 'Seed failed but continuing build') && next build"
   publish = ".next"
 
 [build.environment]

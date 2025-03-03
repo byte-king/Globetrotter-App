@@ -6,13 +6,7 @@ datasource db {
 generator client {
   provider = "prisma-client-js"
   output   = "./generated/sqlite-client"
-  binaryTargets = [
-    "native",
-    "rhel-openssl-3.0.x",
-    "darwin-arm64",
-    "debian-openssl-1.1.x",
-    "linux-arm64-openssl-1.1.x"
-  ]
+  binaryTargets = ["native", "rhel-openssl-3.0.x", "darwin-arm64", "debian-openssl-1.1.x", "linux-arm64-openssl-1.1.x"]
 }
 
 model Destination {
@@ -35,7 +29,7 @@ model User {
   highestScore       Int       @default(0)
   streak             Int       @default(0)
   createdAt          DateTime  @default(now())
-  updatedAt          DateTime @updatedAt
+  updatedAt          DateTime  @updatedAt
   friends            Friend[]  @relation("UserFriends")
   friendOf           Friend[]  @relation("FriendOfUser")
   scores             Score[]

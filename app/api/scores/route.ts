@@ -1,16 +1,13 @@
 // app/api/scores/route.ts
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import prisma from "@/lib/prisma"
 
 export async function GET() {
   try {
-    // Group scores by userId to get total players count
-    const totalPlayers = await prisma.score.groupBy({
-      by: ['userId'],
-      _count: true,
-    });
+    // Get unique players count
+    const totalPlayers = await prisma.user.count();
 
-    // Get top 10 scores ordered by value descending with user info
+    // Get top 10 scores with user info
     const scores = await prisma.score.findMany({
       orderBy: {
         value: 'desc',
@@ -26,120 +23,70 @@ export async function GET() {
       take: 10,
     });
 
-    // Calculate ranks based on score
-    let currentRank = 1;
-    let previousScore: number | null = null;
-    const rankedScores = scores.map((score, index) => {
-      if (previousScore !== score.value) {
-        currentRank = index + 1;
-        previousScore = score.value;
-      }
-      return {
-        id: score.id,
-        value: score.value,
-        streak: score.streak,
-        difficulty: score.difficulty,
-        username: score.user?.username || 'Anonymous',
-        userId: score.user?.id || null,
-        createdAt: score.createdAt,
-        rank: currentRank,
-        totalPlayers: totalPlayers.length,
-      };
-    });
+    // Map and rank the scores
+    const rankedScores = scores.map((score, index) => ({
+      rank: index + 1,
+      id: score.id,
+      value: score.value,
+      username: score.user?.username || 'Anonymous',
+      userId: score.user?.id,
+      streak: score.streak,
+      difficulty: score.difficulty,
+      createdAt: score.createdAt
+    }));
 
-    return NextResponse.json({ scores: rankedScores });
+    return NextResponse.json({
+      totalPlayers,
+      scores: rankedScores
+    });
   } catch (error) {
     console.error('Error fetching scores:', error);
-    return NextResponse.json(
-      {
-        error: 'Error fetching scores',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch scores' }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const { score, streak, difficulty, userId } = await request.json() as {
-      score: number;
-      streak: number;
-      difficulty: string;
-      userId: number;
-    };
+    const { score, streak, difficulty, userId } = await request.json();
 
-    if (score === undefined || streak === undefined || !difficulty || !userId) {
+    if (!score || !difficulty || !userId) {
       return NextResponse.json(
-        {
-          error: 'Missing required parameters',
-          details: 'score, streak, difficulty, and userId are required',
-        },
+        { error: 'Missing required parameters' },
         { status: 400 }
       );
     }
 
-    // Verify user exists
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found', details: `No user found with ID: ${userId}` },
-        { status: 404 }
-      );
-    }
-
-    // Create score record
-    const scoreRecord = await prisma.score.create({
-      data: {
-        value: score,
-        streak,
-        difficulty,
-        userId: user.id,
-      },
-      include: {
-        user: {
-          select: {
-            username: true,
-            id: true,
-          },
-        },
-      },
-    });
-
-    // Update user's highest score if necessary
-    if (score > user.highestScore) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { highestScore: score },
+    // Create score and update user in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      const newScore = await tx.score.create({
+        data: {
+          value: score,
+          streak: streak || 0,
+          difficulty,
+          userId
+        }
       });
-    }
 
-    // Calculate rank for this score
-    const higherScores = await prisma.score.count({
-      where: { value: { gt: score } },
-    });
-    const totalPlayersForRank = await prisma.$queryRaw<{ totalPlayers: number }[]>`
-      SELECT COUNT(DISTINCT "userId") AS "totalPlayers" FROM "Score"
-    `;
-    const rank = higherScores + 1;
-    const isNewRecord = rank === 1;
+      // Update user's highest score if needed
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          highestScore: {
+            set: Math.max(score, await tx.user.findUnique({ 
+              where: { id: userId },
+              select: { highestScore: true }
+            }).then(user => user?.highestScore || 0))
+          },
+          streak: streak || 0
+        }
+      });
 
-    return NextResponse.json({
-      score: scoreRecord.value,
-      isNewRecord,
-      rank,
-      totalPlayers: totalPlayersForRank.length,
-      username: user.username,
-      userId: user.id,
+      return newScore;
     });
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error saving score:', error);
-    return NextResponse.json(
-      {
-        error: 'Error saving score',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to save score' }, { status: 500 });
   }
 }

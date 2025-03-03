@@ -213,8 +213,20 @@ export default function GamePage() {
 
   const startGame = async () => {
     clearGameState();
+    // Initialize game state
+    setScore(0);
+    setStreak(0);
+    setMaxStreak(0);
+    setQuestionsAnswered(0);
+    setQuestionDistribution({
+      easy: 0,
+      medium: 0,
+      hard: 0,
+      brutal: 0
+    });
     setShowDifficultySelect(false);
     setIsTimerActive(true);
+    setTimeRemaining(TIMER_DURATION);
     await fetchDestination();
   };
 
@@ -422,9 +434,6 @@ export default function GamePage() {
 
       {destination && (
         <div className={styles.content}>
-          <div className={styles.difficultyBadge} data-difficulty={destination.difficulty}>
-            {destination.difficulty}
-          </div>
           
           <h2 className={styles.title}>Where in the World?</h2>
           

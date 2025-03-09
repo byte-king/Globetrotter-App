@@ -30,7 +30,10 @@ export async function middleware(request: NextRequest) {
 
   // If user is authenticated and tries to access auth-only routes (login/register)
   if (isValidToken && authOnlyRoutes.some(route => pathname.startsWith(route))) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    // Use request.nextUrl.clone() instead of request.url
+    const url = request.nextUrl.clone();
+    url.pathname = '/dashboard';
+    return NextResponse.redirect(url);
   }
 
   // If user is not authenticated and tries to access protected routes
@@ -38,7 +41,9 @@ export async function middleware(request: NextRequest) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    return NextResponse.redirect(new URL('/login', request.url));
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();

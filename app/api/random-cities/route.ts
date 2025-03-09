@@ -1,9 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
-export async function GET(request: Request) {
+export const dynamic = 'force-dynamic';
+
+
+export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = request.nextUrl;
     const excludeCity = searchParams.get('excludeCity'); // City to exclude from results
     const count = Number(searchParams.get('count')) || 5; // Number of cities to return, default 5
 

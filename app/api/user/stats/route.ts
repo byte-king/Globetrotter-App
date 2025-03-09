@@ -2,10 +2,15 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { getTokenData } from '@/lib/auth';
+import {cookies} from "next/headers";
+
+export const dynamic = 'force-dynamic';
+
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value;
+    const cookieStore = cookies();
+    const token = cookieStore.get('auth-token')?.value;
     
     if (!token) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });

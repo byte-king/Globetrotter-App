@@ -1,7 +1,6 @@
 'use client'
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import styles from './login.module.css';
 
@@ -23,23 +22,28 @@ function LoginForm() {
   const [successMessage, setSuccessMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+
+  const searchParamsMemo = useMemo(() => {
+    return {
+      registered: searchParams.get('registered'),
+      recovered: searchParams.get('recovered'),
+      username: searchParams.get('username')
+    };
+  }, [searchParams.toString()]);
+
+
   useEffect(() => {
-    // Show success message if redirected from registration or recovery
-    const registered = searchParams.get('registered');
-    const recovered = searchParams.get('recovered');
-    
-    if (registered) {
+    if (searchParamsMemo.registered) {
       setSuccessMessage('Registration successful! Please log in with your username.');
-    } else if (recovered) {
+    } else if (searchParamsMemo.recovered) {
       setSuccessMessage('Account recovered! Please log in with your new password.');
     }
 
-    // Pre-fill username if provided
-    const username = searchParams.get('username');
-    if (username) {
-      setFormData(prev => ({ ...prev, username }));
+    if (searchParamsMemo.username) {
+      setFormData(prev => ({ ...prev, username: searchParamsMemo.username || '' }));
     }
-  }, [searchParams]);
+  }, [searchParamsMemo]);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -71,25 +75,25 @@ function LoginForm() {
       return;
     }
 
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-        credentials: 'include'
+    fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+      credentials: 'include'
+    })
+      .then(async res => {
+        if (res.ok) {
+          router.push('/dashboard');
+        } else {
+          const errorData = await res.json(); // Extract error message if available
+          throw new Error(errorData.message || 'Login failed');
+        }
+      })
+      .catch(err => {
+        setError(err instanceof Error ? err.message : 'Login failed');
+        setIsLoading(false);
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Login failed');
-      }
-
-      router.replace('/dashboard');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -139,14 +143,16 @@ function LoginForm() {
                 onClick={() => setShowPassword(!showPassword)}
                 className={styles.showPasswordButton}
                 aria-label={showPassword ? "Hide password" : "Show password"}
+                title={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
               </button>
+
             </div>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className={styles.submitButton}
             disabled={isLoading}
           >
@@ -162,9 +168,9 @@ function LoginForm() {
         </form>
 
         <div className={styles.links}>
-          <Link href="/register" className={styles.registerLink}>
+          <div onClick={() => router.push('/register')} className={styles.registerLink}>
             Create Account
-          </Link>
+          </div>
         </div>
       </div>
     </div>

@@ -39,24 +39,17 @@ const Leaderboard = () => {
   const fetchLeaderboard = async () => {
     try {
       setRefreshing(true);
-      const res = await fetch(`/api/leaderboard?difficulty=${filter}&timeRange=${timeRange}`);
-      let data = await res.json();
-      if(!!!data)data = [];
-      console.log('Leaderboard data received:', data);
-      setLeaderboard(data);
+      const queryParams = new URLSearchParams();
+      if (filter !== 'all') queryParams.append('difficulty', filter);
+      if (timeRange !== 'all') queryParams.append('timeRange', timeRange);
       
-      // Calculate stats
-      const uniquePlayers = new Set(data?.map((entry: LeaderboardEntry) => entry.username)).size;
-      const highestScore = Math.max(...data?.map((entry: LeaderboardEntry) => entry.score), 0);
-      const avgScore = data.length ? 
-        Math.round(data.reduce((acc: number, curr: LeaderboardEntry) => acc + curr.score, 0) / data.length) : 0;
+      const response = await fetch(`/api/leaderboard?${queryParams}`);
+      const data = await response.json();
 
-      setStats({
-        totalPlayers: uniquePlayers,
-        highestScore: highestScore,
-        averageScore: avgScore,
-        totalGames: data.length
-      });
+      if (!response.ok) throw new Error(data.error);
+
+      setLeaderboard(data.rankings);
+      setStats(data.stats);
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
     } finally {

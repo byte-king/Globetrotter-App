@@ -26,7 +26,13 @@ function ScoresContent() {
   useEffect(() => {
     const fetchScores = async () => {
       try {
-        const res = await fetch('/api/scores');
+        const userId = searchParams.get('userId');
+        if (!userId) {
+          console.error('No userId provided');
+          return;
+        }
+
+        const res = await fetch(`/api/scores?userId=${userId}`);
         const data = await res.json();
         setHighScores(data.scores);
         

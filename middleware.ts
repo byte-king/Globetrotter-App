@@ -23,7 +23,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Get auth token
-  const token = request.cookies.get('token')?.value;
+  const token = request.cookies.get('auth-token')?.value;
 
   // Check if token is valid
   const isValidToken = token ? await isTokenValid(token) : false;

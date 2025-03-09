@@ -1,60 +1,70 @@
 // app/api/scores/route.ts
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { supabaseAdmin } from '@/lib/supabase';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // Group scores by userId to get total players count
-    const totalPlayers = await prisma.score.groupBy({
-      by: ['userId'],
-      _count: true,
-    });
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
 
-    // Get top 10 scores ordered by value descending with user info
-    const scores = await prisma.score.findMany({
-      orderBy: {
-        value: 'desc',
-      },
-      include: {
-        user: {
-          select: {
-            username: true,
-            id: true,
-          },
-        },
-      },
-      take: 10,
-    });
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'userId is required' },
+        { status: 400 }
+      );
+    }
 
-    // Calculate ranks based on score
-    let currentRank = 1;
-    let previousScore: number | null = null;
-    const rankedScores = scores.map((score, index) => {
-      if (previousScore !== score.value) {
-        currentRank = index + 1;
-        previousScore = score.value;
+    // Get user's scores
+    const { data: scores, error: scoresError } = await supabaseAdmin
+      .from('Score')
+      .select(`
+        id,
+        value,
+        streak,
+        difficulty,
+        createdAt,
+        userId
+      `)
+      .eq('userId', userId)
+      .order('value', { ascending: false })
+      .limit(10);
+
+    if (scoresError) throw scoresError;
+
+    // Get user info
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('User')
+      .select('username')
+      .eq('id', userId)
+      .single();
+
+    if (userError) throw userError;
+
+    const formattedScores = (scores || []).map((score, index) => ({
+      id: score.id,
+      username: user?.username || 'Anonymous',
+      value: score.value,
+      streak: score.streak || 0,
+      difficulty: score.difficulty || 'N/A',
+      createdAt: score.createdAt,
+      rank: index + 1,
+      userId: score.userId
+    }));
+
+    return NextResponse.json({ 
+      scores: formattedScores,
+      stats: {
+        totalGames: scores?.length || 0,
+        highestScore: Math.max(...(scores?.map(s => s.value) || [0])),
+        averageScore: scores?.length 
+          ? Math.round(scores.reduce((acc, s) => acc + s.value, 0) / scores.length)
+          : 0
       }
-      return {
-        id: score.id,
-        value: score.value,
-        streak: score.streak,
-        difficulty: score.difficulty,
-        username: score.user?.username || 'Anonymous',
-        userId: score.user?.id || null,
-        createdAt: score.createdAt,
-        rank: currentRank,
-        totalPlayers: totalPlayers.length,
-      };
     });
-
-    return NextResponse.json({ scores: rankedScores });
   } catch (error) {
-    console.error('Error fetching scores:', error);
+    console.error('Error fetching user scores:', error);
     return NextResponse.json(
-      {
-        error: 'Error fetching scores',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
+      { error: 'Failed to fetch scores', message: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -62,83 +72,57 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { score, streak, difficulty, userId } = await request.json() as {
-      score: number;
-      streak: number;
-      difficulty: string;
-      userId: number;
-    };
+    const { userId, score, streak, difficulty } = await request.json();
 
-    if (score === undefined || streak === undefined || !difficulty || !userId) {
+    if (!userId || score === undefined || !difficulty) {
       return NextResponse.json(
-        {
-          error: 'Missing required parameters',
-          details: 'score, streak, difficulty, and userId are required',
-        },
+        { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    // Verify user exists
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found', details: `No user found with ID: ${userId}` },
-        { status: 404 }
-      );
-    }
+    // Start a transaction
+    const { data: newScore, error: scoreError } = await supabaseAdmin
+      .from('Score')
+      .insert([
+        {
+          userId: userId,
+          value: score,
+          streak: streak || 0,
+          difficulty
+        }
+      ])
+      .select()
+      .single();
 
-    // Create score record
-    const scoreRecord = await prisma.score.create({
-      data: {
-        value: score,
-        streak,
-        difficulty,
-        userId: user.id,
-      },
-      include: {
-        user: {
-          select: {
-            username: true,
-            id: true,
-          },
-        },
-      },
-    });
+    if (scoreError) throw scoreError;
 
     // Update user's highest score if necessary
-    if (score > user.highestScore) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { highestScore: score },
-      });
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('User')
+      .select('highestScore')
+      .eq('id', userId)
+      .single();
+
+    if (userError) throw userError;
+
+    if (!user.highestScore || score > user.highestScore) {
+      const { error: updateError } = await supabaseAdmin
+        .from('User')
+        .update({ highestScore: score })
+        .eq('id', userId);
+
+      if (updateError) throw updateError;
     }
 
-    // Calculate rank for this score
-    const higherScores = await prisma.score.count({
-      where: { value: { gt: score } },
-    });
-    const totalPlayersForRank = await prisma.$queryRaw<{ totalPlayers: number }[]>`
-      SELECT COUNT(DISTINCT "userId") AS "totalPlayers" FROM "Score"
-    `;
-    const rank = higherScores + 1;
-    const isNewRecord = rank === 1;
-
     return NextResponse.json({
-      score: scoreRecord.value,
-      isNewRecord,
-      rank,
-      totalPlayers: totalPlayersForRank.length,
-      username: user.username,
-      userId: user.id,
+      message: 'Score saved successfully',
+      score: newScore
     });
   } catch (error) {
     console.error('Error saving score:', error);
     return NextResponse.json(
-      {
-        error: 'Error saving score',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
+      { error: 'Failed to save score', message: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

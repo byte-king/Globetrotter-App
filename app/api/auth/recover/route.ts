@@ -1,17 +1,26 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { supabase } from '@/lib/supabase';
 import bcrypt from 'bcrypt';
 
 export async function POST(request: Request) {
   try {
     const { username, email, password } = await request.json();
 
-    // Find user by username
-    const user = await prisma.user.findUnique({
-      where: { username }
-    });
+    if (!username || !email || !password) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
 
-    if (!user) {
+    // Find user by username
+    const { data: user, error: userError } = await supabase
+      .from('User')
+      .select('id, email')
+      .eq('username', username)
+      .single();
+
+    if (userError || !user) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -30,16 +39,20 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Update user's password
-    await prisma.user.update({
-      where: { username },
-      data: { password: hashedPassword }
-    });
+    const { error: updateError } = await supabase
+      .from('User')
+      .update({ password: hashedPassword })
+      .eq('id', user.id);
+
+    if (updateError) {
+      throw updateError;
+    }
 
     return NextResponse.json({ message: 'Account recovered successfully' });
   } catch (error) {
     console.error('Account recovery error:', error);
     return NextResponse.json(
-      { error: 'Failed to recover account' },
+      { error: 'Failed to recover account', message: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

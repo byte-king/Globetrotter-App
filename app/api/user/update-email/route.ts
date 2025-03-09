@@ -1,30 +1,29 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { supabase } from '@/lib/supabase';
+import { getTokenData } from '@/lib/auth';
+import {cookies} from "next/headers";
 
 export async function POST(request: Request) {
   try {
     const { email } = await request.json();
+    const token = (await cookies()).get('auth-token')?.value;
 
-    if (!email) {
-      return NextResponse.json(
-        { error: 'Email is required' },
-        { status: 400 }
-      );
+    if (!token) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: 'Invalid email format' },
-        { status: 400 }
-      );
+    const userData = getTokenData(token);
+    if (!userData) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
     // Check if email is already in use
-    const existingUser = await prisma.user.findFirst({
-      where: { email }
-    });
+    const { data: existingUser, error: checkError } = await supabase
+      .from('User')
+      .select('id')
+      .eq('email', email)
+      .neq('id', userData.userId)
+      .single();
 
     if (existingUser) {
       return NextResponse.json(
@@ -32,12 +31,19 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+    else {
+      console.log('Email is not in use',checkError);
+    }
 
     // Update user's email
-    const updatedUser = await prisma.user.update({
-      where: { id: 1 }, // TODO: Replace with actual user ID from session
-      data: { email }
-    });
+    const { data: updatedUser, error: updateError } = await supabase
+      .from('User')
+      .update({ email })
+      .eq('id', userData.userId)
+      .select('email')
+      .single();
+
+    if (updateError) throw updateError;
 
     return NextResponse.json({
       message: 'Email updated successfully',

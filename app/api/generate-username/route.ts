@@ -1,71 +1,59 @@
 import { NextResponse } from 'next/server';
-import {prisma} from "@/lib/prisma";
+import { supabaseAdmin } from '@/lib/supabase';
 import { uniqueNamesGenerator, Config, adjectives, colors, animals } from 'unique-names-generator';
 
-const customConfig: Config = {
-  dictionaries: [adjectives, colors, animals],
-  separator: '',
-  length: 3,
-  style: 'capital'
-};
-
 export async function GET() {
-  // Create a new PrismaClient instance for this request
-  // This helps avoid prepared statement conflicts in development with hot reloading
-
-  
   try {
-    let username: string;
-    let isUnique = false;
-    let attempts = 0;
-    const maxAttempts = 10;
+    // Test the connection with a simpler query
+    const { data:newData, error: testError } = await supabaseAdmin
+      .from('User')
+      .select('id')
+      .limit(1);
 
-    // Keep generating until we find a unique username or hit max attempts
-    while (!isUnique && attempts < maxAttempts) {
-      username = uniqueNamesGenerator(customConfig);
-      
-      // Add random numbers if we're not on the first attempt
-      if (attempts > 0) {
-        username += Math.floor(Math.random() * 1000);
-      }
-
-      try {
-        // Check if username exists - with error handling
-        const existingUser = await prisma.user.findFirst({
-          where: { username },
-          select: { id: true }
-        });
-
-        if (!existingUser) {
-          isUnique = true;
-          return NextResponse.json({ username });
-        }
-      } catch (queryError) {
-        console.warn('Query error, trying alternative approach:', queryError);
-        // If the query fails, generate a unique username with timestamp
-        // This is a fallback to ensure we still return something useful
-        username = `Player${Date.now()}${Math.floor(Math.random() * 1000)}`;
-        return NextResponse.json({ username });
-      }
-
-      attempts++;
+    if (testError) {
+      console.error('Connection test failed:', testError);
+      throw testError;
+    }
+    else{
+      console.log('Connection test passed:', newData);
     }
 
-    // If we couldn't generate a unique username after max attempts
-    if (!isUnique) {
-      // Generate a username with timestamp to ensure uniqueness
-      username = `Player${Date.now()}`;
-      return NextResponse.json({ username });
+    // Generate username logic
+    const customConfig: Config = {
+      dictionaries: [adjectives, colors, animals],
+      separator: '',
+      length: 3,
+      style: 'capital'
+    };
+
+    let username = uniqueNamesGenerator(customConfig);
+    
+    const { data, error } = await supabaseAdmin
+      .from('User')
+      .select('username')
+      .ilike('username', username)
+      .limit(1);
+
+    if (error) {
+      console.error('Username check failed:', error);
+      throw error;
     }
 
-    // This should never be reached due to the returns above, but TypeScript needs it
-    return NextResponse.json({ username: `Player${Date.now()}` });
+    if (data && data.length > 0) {
+      username += Math.floor(Math.random() * 1000);
+    }
+
+    return NextResponse.json({ username, success: true });
 
   } catch (error) {
-    console.error('Error generating username:', error);
+    console.error('Error in username generation:', error);
     return NextResponse.json(
-      { error: 'Failed to generate username' },
+      { 
+        error: 'Failed to generate username',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        success: false 
+      },
       { status: 500 }
     );
-  } 
+  }
 } 

@@ -1,17 +1,12 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { supabase } from '@/lib/supabase';
 import bcrypt from 'bcrypt';
-import * as jose from 'jose';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-const secret = new TextEncoder().encode(JWT_SECRET);
+import { SignJWT } from 'jose';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { username, password } = body;
+    const { username, password } = await request.json();
 
-    // Check for missing fields
     if (!username || !password) {
       return NextResponse.json(
         { error: 'Username and password are required' },
@@ -19,76 +14,53 @@ export async function POST(request: Request) {
       );
     }
 
-    // Find user by username with all required fields
-    const user = await prisma.user.findUnique({
-      where: { username },
-      select: {
-        id: true,
-        username: true,
-        password: true,
-        score: true,
-        highestScore: true,
-        streak: true,
-      }
-    });
+    // Find user by username
+    const { data: user, error: userError } = await supabase
+      .from('User')
+      .select('id, username, password')
+      .eq('username', username)
+      .single();
 
-    if (!user) {
+    if (userError || !user) {
       return NextResponse.json(
-        { error: 'Invalid username or password' },
+        { error: 'Invalid credentials' },
         { status: 401 }
       );
     }
 
     // Verify password
-    const passwordMatch = await bcrypt.compare(password, user.password);
-
-    if (!passwordMatch) {
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
       return NextResponse.json(
-        { error: 'Invalid username or password' },
+        { error: 'Invalid credentials' },
         { status: 401 }
       );
     }
 
-    // Generate JWT token
-    const token = await new jose.SignJWT({ 
-      userId: user.id,
-      username: user.username
-    })
+    // Create JWT token
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const token = await new SignJWT({ userId: user.id, username: user.username })
       .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('7d')
+      .setExpirationTime('24h')
       .sign(secret);
 
-    // Create user data without sensitive information
-    const userData = {
-      id: user.id,
-      username: user.username,
-      highestScore: user.highestScore,
-      score: user.score,
-      streak: user.streak
-    };
+    // Set cookie with token
+    const response = NextResponse.json(
+      { message: 'Login successful', user: { id: user.id, username: user.username } }
+    );
 
-    // Create response with cookie
-    const response = NextResponse.json({
-      message: 'Login successful',
-      user: userData
-    });
-
-    // Set cookie
-    response.cookies.set({
-      name: 'token',
-      value: token,
+    response.cookies.set('auth-token', token, {
       httpOnly: true,
-      path: '/',
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60,
-      secure: process.env.NODE_ENV === 'production'
+      maxAge: 60 * 60 * 24 // 24 hours
     });
 
     return response;
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
-      { error: 'Login failed' },
+      { error: 'Failed to login', message: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

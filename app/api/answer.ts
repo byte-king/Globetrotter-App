@@ -1,38 +1,108 @@
-// pages/api/answer.ts
-import type { NextApiRequest, NextApiResponse } from 'next';
-import prisma from "@/lib/prisma"
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Create a new PrismaClient instance for each request to avoid prepared statement conflicts
+import { NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
 
-  
-  if (req.method !== 'POST')
-    return res.status(405).json({ error: 'Method not allowed' });
-    
-  const { destinationId, guess } = req.body;
-  
-  if (!destinationId || !guess)
-    return res.status(400).json({ error: 'Missing parameters' });
-  
+export async function POST(request: Request) {
   try {
-    const destination = await prisma.destination.findUnique({
-      where: { id: Number(destinationId) }
-    });
+    const body = await request.json();
+    const { destinationId, guess } = body;
     
-    if (!destination)
-      return res.status(404).json({ error: 'Destination not found' });
-    
+    if (!destinationId || !guess) {
+      return NextResponse.json({ 
+        error: 'Missing parameters',
+        details: {
+          destinationId: !destinationId ? 'Required field' : null,
+          guess: !guess ? 'Required field' : null
+        }
+      }, { status: 400 });
+    }
+
+    // Fetch destination from Supabase
+    const { data: destination, error } = await supabase
+      .from('Destination')
+      .select(`
+        id,
+        city,
+        country,
+        fun_facts,
+        trivia,
+        clues,
+        difficulty
+      `)
+      .eq('id', destinationId)
+      .single();
+
+    if (error || !destination) {
+      return NextResponse.json({ 
+        error: 'Destination not found',
+        details: `No destination found with ID: ${destinationId}`
+      }, { status: 404 });
+    }
+
     const isCorrect = destination.city.toLowerCase() === guess.toLowerCase();
-    const feedback = isCorrect ? 'correct' : 'incorrect';
-    
-    // Parse funFacts and trivia JSON strings
-    const funFacts = JSON.parse(destination.funFacts);
-    const trivia = JSON.parse(destination.trivia);
-    
-    const messages = funFacts.concat(trivia);
-    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-    
-    res.status(200).json({ feedback, funMessage: randomMessage });
+
+    // Get random message from fun facts or trivia
+    let messages: string[] = [];
+    try {
+      const funFacts = Array.isArray(destination.fun_facts) 
+        ? destination.fun_facts 
+        : JSON.parse(destination.fun_facts || '[]');
+      
+      const trivia = Array.isArray(destination.trivia)
+        ? destination.trivia
+        : JSON.parse(destination.trivia || '[]');
+
+      messages = [...funFacts, ...trivia];
+    } catch (parseError) {
+      console.error('Error parsing fun facts or trivia:', parseError);
+      messages = ['Did you know? This city has many interesting facts!'];
+    }
+
+    const randomMessage = messages.length > 0
+      ? messages[Math.floor(Math.random() * messages.length)]
+      : 'Interesting place to visit!';
+
+    // Optional: Log the answer attempt
+    try {
+      await supabase
+        .from('answer_logs')
+        .insert([{
+          destination_id: destinationId,
+          guess: guess,
+          is_correct: isCorrect,
+          created_at: new Date().toISOString()
+        }]);
+    } catch (logError) {
+      console.error('Failed to log answer attempt:', logError);
+      // Don't fail the request if logging fails
+    }
+
+    return NextResponse.json({
+      isCorrect,
+      feedback: isCorrect ? 'correct' : 'incorrect',
+      funMessage: randomMessage,
+      correctAnswer: isCorrect ? undefined : destination.city,
+      additionalInfo: {
+        country: destination.country,
+        difficulty: destination.difficulty,
+        remainingClues: destination.clues?.length || 0
+      }
+    });
+
   } catch (error) {
-    res.status(500).json({ error: `Error processing answer: ${error}` });
+    console.error('Error processing answer:', error);
+    return NextResponse.json({
+      error: 'Failed to process answer',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
+}
+
+// Handle preflight requests
+export async function OPTIONS() {
+  return NextResponse.json({}, {
+    headers: {
+      'Access-Control-Allow-Methods': 'POST',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+    }
+  });
 }

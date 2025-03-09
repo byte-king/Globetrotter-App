@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { supabaseAdmin } from '@/lib/supabase';
 import bcrypt from 'bcrypt';
-import { isValidUsername, normalizeUsername, isValidEmail } from '@/app/utils/validation';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { username, email, password } = body;
+    const { username, email, password } = await request.json();
 
-    // Check for missing fields
     if (!username || !email || !password) {
       return NextResponse.json(
         { error: 'All fields are required' },
@@ -16,57 +13,24 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate username format
-    if (!isValidUsername(username)) {
-      return NextResponse.json(
-        { error: 'Username must contain only letters' },
-        { status: 400 }
-      );
-    }
+    // Check if username already exists
+    const { data: existingUser, error } = await supabaseAdmin
+      .from('User')
+      .select('id')
+      .or(`username.eq.${username},email.eq.${email}`)
+      .single();
 
-    // Validate email format
-    if (!isValidEmail(email)) {
-      return NextResponse.json(
-        { error: 'Invalid email format' },
-        { status: 400 }
-      );
-    }
-
-    // Check password length
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: 'Password must be at least 6 characters long' },
-        { status: 400 }
-      );
-    }
-
-    const normalizedUsername = normalizeUsername(username);
-
-    // Check if username already exists (case-insensitive)
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        normalizedUsername: normalizedUsername
+      if(error){
+        return NextResponse.json(
+          { error: 'Failed to check username or email' },
+          { status: 500 }
+        );
       }
-    });
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'Username already taken' },
-        { status: 400 }
-      );
-    }
-
-    // Check if email already exists
-    const existingEmail = await prisma.user.findUnique({
-      where: {
-        email: email
-      }
-    });
-
-    if (existingEmail) {
-      return NextResponse.json(
-        { error: 'Email already registered' },
-        { status: 400 }
+        { error: 'Username or email already exists' },
+        { status: 409 }
       );
     }
 
@@ -74,29 +38,33 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create new user
-    const newUser = await prisma.user.create({
-      data: {
-        username,
-        normalizedUsername,
-        email,
-        password: hashedPassword,
-        highestScore: 0
-      }
+    const { data: newUser, error: createError } = await supabaseAdmin
+      .from('User')
+      .insert([
+        {
+          username,
+          normalizedUsername: username.toLowerCase(),
+          email,
+          password: hashedPassword,
+          highestScore: 0,
+          totalGames: 0
+        }
+      ])
+      .select('id, username')
+      .single();
+
+    if (createError) {
+      throw createError;
+    }
+
+    return NextResponse.json({
+      message: 'Registration successful',
+      user: { id: newUser.id, username: newUser.username }
     });
-
-    // Remove password from response
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: _, ...userWithoutPassword } = newUser;
-
-    return NextResponse.json(
-      { message: 'User registered successfully', user: userWithoutPassword },
-      { status: 201 }
-    );
-
   } catch (error) {
     console.error('Registration error:', error);
     return NextResponse.json(
-      { error: 'Failed to register user' },
+      { error: 'Failed to register', message: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

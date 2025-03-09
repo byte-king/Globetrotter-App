@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 // import { MdVisibility, MdVisibilityOff } from 'react-icons/md';
 import styles from './register.module.css';
-import { isValidUsername, isValidEmail } from '../utils/validation';
+import { isValidUsername, isValidEmail } from '../../utils/validation';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -27,13 +27,23 @@ export default function RegisterPage() {
   const generateNewUsername = async () => {
     try {
       setIsGeneratingUsername(true);
+      setError(''); // Clear any existing errors
+
       const res = await fetch('/api/generate-username');
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
       const data = await res.json();
-      if (data.username) {
+      
+      if (data.success && data.username) {
         setFormData(prev => ({ ...prev, username: data.username }));
+      } else {
+        setError(data.error || 'Failed to generate username');
       }
     } catch (error) {
       console.error('Error generating username:', error);
+      setError('Failed to generate username. Please try again.');
     } finally {
       setIsGeneratingUsername(false);
     }

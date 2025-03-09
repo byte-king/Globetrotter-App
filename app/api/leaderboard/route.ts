@@ -18,7 +18,7 @@ export async function GET(request: Request) {
         id,
         username,
         highestScore,
-        Score!score_user_id_fkey (
+        Score (
           id,
           streak,
           difficulty,
